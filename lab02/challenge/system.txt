@@ -1,0 +1,3 @@
+Hostname: codespaces-4d3992
+Shell: /bin/bash
+Home: /home/codespace
