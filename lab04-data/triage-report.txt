@@ -1,0 +1,44 @@
+File Triage Report
+
+Total Files: 24
+Total Directories: 9
+Python Files: 2
+Shell Scripts: 1
+Log Files: 4
+Configuration Files: 3
+Empty Files: 2
+Archives: 1
+
+Detected File Types in Evidence: cannot open `evidence.dat' (No such file or directory)
+Files Containing admin: 0
+Files Containing "admin":
+./logs/auth.log
+./logs/access.log
+./backups/users.old
+./evidence/notes.txt
+./triage-report.txt
+
+Detected File Types in Evidence:
+evidence/archive.zip:    Zip archive data, at least v2.0 to extract, compression method=deflate
+evidence/empty.bin:      empty
+evidence/image.png:      PNG image data, 1 x 1, 8-bit/color RGBA, non-interlaced
+evidence/notes.txt:      ASCII text
+evidence/passwords.txt:  ASCII text
+evidence/readme.md:      ASCII text
+evidence/suspicious.dat: ELF, unknown class 154
+Archives: 1
+ 
+
+Files Containing "admin":
+./logs/auth.log
+./logs/access.log
+./backups/users.old
+./evidence/notes.txt
+
+Detected File Types in Evidence:
+     18 ASCII text
+      2 empty
+      1 Zip archive data
+      1 PNG image data
+      1 ELF
+      1 Bourne-Again shell script

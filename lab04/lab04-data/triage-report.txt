@@ -1,44 +1,17 @@
-File Triage Report
+#!/bin/bash
 
-Total Files: 24
-Total Directories: 9
-Python Files: 2
-Shell Scripts: 1
-Log Files: 4
-Configuration Files: 3
-Empty Files: 2
-Archives: 1
+PYTHON_FILES=2
+SHELL_SCRIPTS=1
+LOG_FILES=4
+CONFIG_FILES=3
+TOTAL_FILES=22
 
-Detected File Types in Evidence: cannot open `evidence.dat' (No such file or directory)
-Files Containing admin: 0
-Files Containing "admin":
-./logs/auth.log
-./logs/access.log
-./backups/users.old
-./evidence/notes.txt
-./triage-report.txt
+SCRIPTS=$((PYTHON_FILES + SHELL_SCRIPTS))
+OTHER=$((TOTAL_FILES - SCRIPTS - LOG_FILES - CONFIG_FILES))
+PERCENT_LOGS=$((LOG_FILES * 100 / TOTAL_FILES))
 
-Detected File Types in Evidence:
-evidence/archive.zip:    Zip archive data, at least v2.0 to extract, compression method=deflate
-evidence/empty.bin:      empty
-evidence/image.png:      PNG image data, 1 x 1, 8-bit/color RGBA, non-interlaced
-evidence/notes.txt:      ASCII text
-evidence/passwords.txt:  ASCII text
-evidence/readme.md:      ASCII text
-evidence/suspicious.dat: ELF, unknown class 154
-Archives: 1
- 
-
-Files Containing "admin":
-./logs/auth.log
-./logs/access.log
-./backups/users.old
-./evidence/notes.txt
-
-Detected File Types in Evidence:
-     18 ASCII text
-      2 empty
-      1 Zip archive data
-      1 PNG image data
-      1 ELF
-      1 Bourne-Again shell script
+echo "Scripts (Python + shell) : $SCRIPTS"
+echo "Logs                     : $LOG_FILES"
+echo "Configuration files      : $CONFIG_FILES"
+echo "Everything else          : $OTHER"
+echo "Logs as % of all files   : $PERCENT_LOGS%"
