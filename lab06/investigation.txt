@@ -1,0 +1,54 @@
+File                         Lines    Failed logins   First timestamp      Last timestamp
+]633;E;for f in case/logs/auth.log ../lab03-data/auth.log;bc225f0a-2829-4dc5-bf7e-8135fd08e215]633;Ccase/logs/auth.log           60       45              Sep 20 08:00:20      Sep 20 08:46:20
+../lab03-data/auth.log       184      124             Sep 20 08:00:20      Sep 20 10:05:52
+
+Part 8: Investigation Challenge
+1. Collected log attackers:
+Total failed logins: 45
+Top attacker: 203.0.113.10
+Top 3 attackers:
+Top 3 failed-login sources:
+     15 203.0.113.10
+     14 198.51.100.24
+      8 198.51.100.77
+Top 3 targeted usernames:
+     17 admin
+     10 root
+      7 guest
+Full server log attackers:
+Total failed logins: 124
+Top attacker: 203.0.113.10
+Top 3 attackers:
+Top 3 failed-login sources:
+     51 203.0.113.10
+     37 198.51.100.24
+     15 198.51.100.77
+Top 3 targeted usernames:
+     39 admin
+     35 root
+     18 guest
+The top attacker is the same in both logs.
+2. Complete targeted username list:
+     39 admin
+     35 root
+     18 guest
+     13 test
+     13 backup
+      5 oracle
+      1 invalid
+The word invalid can appear because the pipeline takes the first word after 'for'. In 'Failed password for invalid user', that word is invalid, not the username.
+3. Web log results:
+Total failed logins: 0
+Top attacker: 
+Top 3 attackers:
+Top 3 failed-login sources:
+
+Top 3 targeted usernames:
+The web log is not an SSH authentication log, so the Failed password statistics are not meaningful for web requests.
+A better script would check the log type before performing SSH-specific analysis.
+4. Firewall BLOCK events:
+BLOCK 203.0.113.10 -> 10.0.0.10:22
+BLOCK 198.51.100.24 -> 10.0.0.10:22
+BLOCK 203.0.113.200 -> 10.0.0.30:3389
+Possible explanation 1: The SSH attempts happened before the firewall block was applied.
+Possible explanation 2: The authentication log and firewall log may cover different systems or collection periods.
