@@ -1,0 +1,85 @@
+Lab 9: for Loops and Repetitive Security Tasks
+
+Exercise 1
+
+1. auth.log has 15 accepted logins. access.log and firewall.log have 0.
+
+2. Yes. The total is 45, the same as auth.log alone. The other logs have no Failed password lines.
+
+3. A literal list checks only the files named in the loop. A glob checks all matching files. If a fourth log is added, the glob will include it automatically.
+
+4. port_report.sh now checks port and debug settings. It also checks the old backup configuration. config.old has port=80 and debug=true.
+
+5. No. case/logs/*.log only checks one folder. It does not go into nested folders. The second glob pattern can find case/nested/archive/old.log.
+
+Exercise 2
+
+1. The matched indicators in auth.log are:
+203.0.113.10
+198.51.100.24
+203.0.113.200
+
+2. The loop splits the file on spaces. It would treat malicious and host as two different indicators instead of one.
+
+3. Yes. sweep_all.sh agrees with the Lab 8 results for the three IP addresses.
+
+4. 203.0.113.10 and 198.51.100.24 appear in all three logs.
+203.0.113.200 appears in two logs.
+The domain indicators malicious.example, bad-login.example and suspicious.example were not found. The MD5 hash indicator was not found in the logs either.
+
+5. 198.51.100.77 and 203.0.113.15 are missing from the IOC list.
+Both made failed SSH login attempts. I would investigate them before adding them. I would check more logs, the source of the traffic and whether the attempts are repeated.
+
+6. The web clients missing from the IOC list are:
+192.168.1.20
+192.168.1.35
+198.51.100.99
+203.0.113.77
+
+The external addresses are 198.51.100.99 and 203.0.113.77. The two 192.168 addresses are internal.
+
+Exercise 3
+
+1. diff and sha256sum -c detect the change to work_evidence/notes.txt.
+
+2. SHA-256 checks the file contents, not just its size. Replacing one letter with another would keep the same file size but change the hash.
+
+3. All original evidence files should report OK because the evidence was not changed after the baseline was created. This confirms they match the saved baseline, not that they are safe.
+
+4. empty.bin and /dev/null have the same SHA-256 hash because both contain zero bytes. All empty files have the same SHA-256 hash.
+
+5. No evidence file matched the listed MD5 indicator. A hash matches only the exact file contents. Even a small change gives a different hash.
+
+6. The temporary work_evidence directory and temporary hash files were deleted.
+
+Exercise 4
+
+1. With the original script, the expected file types match for archive.zip, image.png, notes.txt, passwords.txt and readme.md. empty.bin and suspicious.dat have no extension expectation.
+
+2. An empty .bin file should be reported as empty. suspicious.dat contains ELF data rather than ordinary data, so it should be flagged.
+
+3. The first four ELF bytes are 0x7F, E, L and F.
+
+4. Unknown class suggests a corrupted or deliberately disguised ELF file. It should not be executed to find out what it does.
+
+5. magic_check.sh now checks case/scripts too. It expects shell script for .sh and Python for .py. Files detected only as ASCII text may be flagged because the expected type name is missing.
+
+Exercise 5
+
+1. The broken command prints two zeros because grep -c prints 0 and echo 0 also runs. Using || true fixes this.
+
+2. The unmatched glob prints the literal pattern case/logs/*.xyz. Adding [ -f "$FILE" ] || continue prevents this.
+
+3. Resetting TOTAL inside the loop gives the wrong total. TOTAL must be set to 0 before the loop.
+
+Investigation Challenge
+
+1. auth.log and firewall.log each contain 3 distinct IOC indicators, the highest number. access.log contains 40 indicator-matching lines, more than auth.log with 34 or firewall.log with 3. These results differ because one indicator can appear on many lines.
+
+2. suspicious.dat is flagged because it contains ELF data instead of the expected generic data type. report.py and scan.py may also be flagged because file detects them as ASCII text rather than Python scripts.
+
+3. case/nested/archive/old.log was not included. The survey checks case/logs, case/scripts and case/evidence, not deeper nested folders.
+
+4. No changes are needed. The glob case/logs/* will include vpn.log automatically.
+
+5. The SSH logs show failed login attempts from addresses including 203.0.113.10, 198.51.100.24, 198.51.100.77 and 203.0.113.200. The web log also shows requests from other external clients, including scanning activity, while the firewall blocked traffic to SSH and RDP ports. The workstation evidence contains plaintext passwords and a suspicious ELF file with a .dat extension. These findings need investigation, but they do not prove that an attacker successfully accessed the system.
