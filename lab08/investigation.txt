@@ -1,0 +1,131 @@
+Exercise 1 - inspect_path.sh
+Command: ./inspect_path.sh case/logs/auth.log
+case/logs/auth.log is a regular file
+  and it is not empty (5736 bytes)
+Exit code: 0
+Command: ./inspect_path.sh case/nested
+case/nested is a directory
+Exit code: 0
+Command: ./inspect_path.sh case/evidence/empty.bin
+case/evidence/empty.bin is a regular file
+  but it is empty
+Exit code: 0
+Command: ./inspect_path.sh case/logs/missing.log
+case/logs/missing.log does not exist
+Exit code: 2
+Command: ./inspect_path.sh /dev/null
+/dev/null exists but is neither a regular file nor a directory
+Exit code: 0
+
+Exercise 3 - IP Search
+
+IP               auth.log   access.log   firewall.log
+203.0.113.10     15         21           1
+198.51.100.24    14         19           1
+203.0.113.200    5          0            1
+
+The numbers show how many log lines contain each IP.
+
+Investigation Challenge - Script Runs
+Command: ./investigate.sh case/logs/auth.log 198.51.100.77
+IP address: 198.51.100.77
+Occurrences: 8
+Failed logins: 8
+Risk: MEDIUM (8 failed attempts)
+No firewall entries for 198.51.100.77
+198.51.100.77 is not in the IOC list
+Exit code: 0
+Command: ./investigate.sh case/logs/auth.log 203.0.113.200
+IP address: 203.0.113.200
+Occurrences: 5
+Failed logins: 5
+Risk: MEDIUM (5 failed attempts)
+Firewall entries:
+BLOCK 203.0.113.200 -> 10.0.0.30:3389
+203.0.113.200 is in the IOC list
+Exit code: 0
+Command: ./investigate.sh case/logs/access.log 203.0.113.77
+IP address: 203.0.113.77
+Occurrences: 12
+Failed logins: 0
+Risk: NONE (no failed attempts)
+No firewall entries for 203.0.113.77
+203.0.113.77 is not in the IOC list
+Exit code: 0
+Command: ./investigate.sh case/logs/auth.log admin
+Username: admin
+Failed logins: 17
+Accepted logins: 0
+admin: LEGACY account
+Exit code: 0
+Command: ./investigate.sh case/logs/auth.log alice
+Username: alice
+Failed logins: 0
+Accepted logins: 6
+alice: CURRENT account
+Exit code: 0
+Command: ./investigate.sh case/logs/missing.log admin
+Error: 'case/logs/missing.log' does not exist
+Exit code: 2
+
+Exercise 1 - Answers
+
+2. inspect_path.sh now checks if a regular file is readable and prints a warning if it is not.
+
+3. A directory can be executable because the x permission allows a user to enter or search the directory.
+
+4. check.sh has an interpreter line (#!/bin/bash), but it is not executable. report.py and scan.py have no interpreter line and are not executable. The file command can report them as ordinary text because they do not have a shebang.
+
+5. Yes, scratch.log can be deleted after chmod 444. Removing a file depends on the permissions of the directory, not the write permission on the file.
+
+Exercise 2 - Answers
+
+1. auth.log passes the checks. empty.bin fails -s because it is empty. case/logs fails -f because it is a directory.
+
+2. Checking -f first makes sure the path is a regular file before checking its read permission. With &&, Bash stops checking when a test fails.
+
+3. case is a directory and auth.log is a regular file. /dev/null is a character device, not a regular file or directory.
+
+4. guard_clause.sh now returns 2 for a non-regular file, 3 for an unreadable file and 4 for an empty file.
+
+Exercise 3 - Answers
+
+1. The IP table is recorded above.
+
+2. A found IP returns exit 0. An IP not found returns exit 3. A missing log returns exit 2.
+
+3. Not found is different from an error because the search worked but did not find a match.
+
+4. grep -c "203.0.113.1" matches longer addresses such as 203.0.113.10 and 203.0.113.15. The exact check_ip.sh search does not find 203.0.113.1.
+
+5. ip_decision.sh now prints the firewall line when the IP is found, including the action and destination.
+
+6. The nine IP searches were run separately without a loop.
+
+Exercise 4 - Answers
+
+1. root and admin have failed logins. alice and charlie have successful logins only. frank has no activity.
+
+2. ! grep -q checks whether the username was not found in the log. The script exits early because there is no activity to classify.
+
+3. The trailing space helps match the full username. Searching for admin alone could also match sysadmin.
+
+4. check_username.sh now prints HIGH RISK when there are more than 5 failed attempts.
+
+5. alice logged in from 4 different IP addresses, the most of any account in this log. Her password is also stored in plaintext in case/evidence/passwords.txt.
+
+Exercise 5 - Answers
+
+1. [ -f $FILE ] with an empty variable gives a false positive because Bash tests the non-empty string -f. The quoted version works correctly.
+
+2. The broken check_ip.sh uses grep without -F. It can match an incorrect address because dots are treated as regular expression characters.
+
+3. grep -w alone is not enough. It checks word boundaries but still treats dots as wildcards. grep -wF is needed for this example.
+
+Investigation Challenge - Answers
+
+1. 198.51.100.77 made 8 failed login attempts. It is not in intel/iocs.txt and does not appear in the firewall log. The IOC list alone is not enough because it can miss suspicious addresses.
+
+2. 203.0.113.200 is in the IOC list. The firewall blocked it from port 3389, normally used by RDP (Remote Desktop Protocol). auth.log shows failed SSH login attempts. SSH normally uses port 22.
+
+3. 203.0.113.77 appears in access.log but not auth.log. It made HTTP requests to pages including /admin, /wp-login.php, /robots.txt and /assets/app.js. Some requests used sqlmap, curl and python-requests. This suggests web scanning and probing, but it does not prove a successful attack.
