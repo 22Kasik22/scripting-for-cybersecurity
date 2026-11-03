@@ -1,0 +1,122 @@
+Lab 7: Decisions in Bash
+
+Exercise 1
+1. firewall.log: SMALL (5 lines); auth.log: MEDIUM (60 lines); access.log: LARGE (80 lines); old.log: SMALL (1 line).
+2. EMPTY must be first because 0 is also less than 10. empty.bin is EMPTY (0 lines).
+3. SMALL_LIMIT and MEDIUM_LIMIT make thresholds easier to change in one place.
+4. Tested backups/config.old, configs/app.conf, docs/inventory.txt, evidence/suspicious.dat, logs/auth.log, nested/archive/old.log and scripts/scan.py. Unrecognised: config.old and suspicious.dat.
+5. auth.log exists and has 60 lines; empty.bin exists and has no lines; no_such_file.txt does not exist.
+6. wc -l counts newline bytes. The binary image is not text, so its 2 newline bytes are not meaningful text lines. wc -c counts bytes and [ -s file ] checks if a file has data.
+
+Exercise 2
+1. root: CRITICAL warning; admin: generic admin warning; guest: disabled warning; alice: standard account; empty: error, exit 1.
+2. Removing quotes from the first -z test gives no Bash error for an empty username in this particular case. The condition still matches. Other unquoted tests can produce errors such as 'too many arguments' with spaces.
+3. Before the fix, Yes is unrecognised. After using ${ANSWER,,}, Yes, YES and yes are accepted.
+4. case/backups/config.old has debug=true. It is a backup, not the current configuration. Old settings can reveal past insecure settings or be reused later.
+5. Only case/configs/server.conf has tls=true. app.conf, backup.conf and case/backups/config.old do not mention TLS.
+6. debug_check.sh now treats true, True, TRUE and yes as on.
+
+Exercise 3
+1. 203.0.113.10: 15 failures, HIGH; 198.51.100.24: 14 failures, MEDIUM; 198.51.100.77: 8 failures, MEDIUM; 203.0.113.200: 5 failures, MEDIUM; 203.0.113.15: 3 failures, LOW.
+2. For abc, Bash reports 'integer expression expected' because numeric tests need a number. The original script may then fall through to HIGH.
+3. CRITICAL for 30 or more must be checked before the final HIGH else branch.
+4. = says 10 and 9 are not equal. -gt says 10 is greater than 9 as numbers. Text ordering says 10 sorts before 9 because 1 comes before 9.
+5. The port changed from 80 to 443. The new port 443 is privileged and is the standard HTTPS port.
+6. port=https gives 'integer expression expected' in the original version. The updated script prints an invalid port message.
+
+Exercise 4
+1. Direct if grep -q finds sqlmap and prints Scanning tool activity detected.
+2. The explicit $? version prints the same result.
+3. echo changes $? to 0, so checking $? after echo tests echo, not grep. This can incorrectly say scanning was detected.
+4. admin, root, backup: LEGACY. guest, oracle, test: UNKNOWN. No targeted usernames in Failed password lines are CURRENT.
+5. -x matches the whole line in users.old; the comma matches the username field in users.csv. Without either check, admin could also match sysadmin.
+
+Exercise 5
+1. An unquoted username with spaces produces 'binary operator expected'. risk_level.sh abc produces 'integer expression expected'.
+2. After fixing order_bug.sh: 10 -> At least 10; 5 -> Non-negative; -3 -> Negative.
+3. A carriage return makes 'yes' fail a string comparison. tr -d '\r' removes it. The character is hard to notice because it is usually invisible.
+
+Investigation Challenge - Answers
+1. None of the usernames in Failed password lines are current accounts. The attackers seem to be trying common names and old account names rather than the current user list.
+2. LEGACY targeted usernames are admin, root and backup. root would be most dangerous if it still allowed remote login because it has full system privileges.
+3. There are no accepted logins for disabled current accounts and none from non-192.168. addresses in this log. That means no such success is shown here, but it does not prove that no compromise happened elsewhere.
+4. alice and bob have plaintext credentials in case/evidence/passwords.txt and successful logins. alice logged in from 4 different internal IPs (192.168.1.55, 192.168.1.35, 192.168.1.40 and 192.168.1.20). bob logged in from 3 different internal IPs (192.168.1.20, 192.168.1.35 and 192.168.1.40). Exposed passwords and successful logins are worth investigating because an attacker could use the credentials.
+
+Investigation Challenge - Recorded Script Runs
+
+Input: alice
+alice: CURRENT account
+Role: student
+Status: active
+Failed logins: 0
+Accepted logins: 6
+Risk: NONE (no failed attempts)
+WARNING: current account has accepted logins and exposed plaintext credentials
+Exit code: 0
+
+Input: bob
+bob: CURRENT account
+Role: student
+Status: active
+Failed logins: 0
+Accepted logins: 5
+Risk: NONE (no failed attempts)
+WARNING: current account has accepted logins and exposed plaintext credentials
+Exit code: 0
+
+Input: eve
+eve: CURRENT account
+Role: staff
+Status: active
+Failed logins: 0
+Accepted logins: 3
+Risk: NONE (no failed attempts)
+Exit code: 0
+
+Input: david
+david: CURRENT account
+Role: student
+Status: disabled
+Failed logins: 0
+Accepted logins: 0
+Risk: NONE (no failed attempts)
+Exit code: 0
+
+Input: admin
+admin: LEGACY account (only in the old backup list)
+Failed logins: 17
+Accepted logins: 0
+Risk: HIGH (17 failed attempts)
+WARNING: attacker tried a legacy or unknown username
+Exit code: 2
+
+Input: root
+root: LEGACY account (only in the old backup list)
+Failed logins: 10
+Accepted logins: 0
+Risk: MEDIUM (10 failed attempts)
+WARNING: attacker tried a legacy or unknown username
+Exit code: 2
+
+Input: backup
+backup: LEGACY account (only in the old backup list)
+Failed logins: 4
+Accepted logins: 0
+Risk: LOW (4 failed attempts)
+WARNING: attacker tried a legacy or unknown username
+Exit code: 2
+
+Input: oracle
+oracle: UNKNOWN account (in neither list)
+Failed logins: 3
+Accepted logins: 0
+Risk: LOW (3 failed attempts)
+WARNING: attacker tried a legacy or unknown username
+Exit code: 3
+
+Input: nobody
+nobody: UNKNOWN account (in neither list)
+Failed logins: 0
+Accepted logins: 0
+Risk: NONE (no failed attempts)
+Exit code: 3
